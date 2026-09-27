@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Delete your account · Context</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand"><div class="mark">C</div><div class="brand-name">Context</div></div>
+
+    <h1>Delete your Context account</h1>
+    <p>
+      This permanently deletes your account and everything attached to it. To confirm it
+      is really you, we will email you a one-time sign-in link.
+    </p>
+
+    <div class="card">
+      <h2 style="margin-top:0">What gets deleted</h2>
+      <ul>
+        <li>Your account and sign-in details</li>
+        <li>Your profile — name, goal, favourite topics and level</li>
+        <li>Every word in your Dictionary</li>
+        <li>All generated lessons and your completion history, streak and progress</li>
+      </ul>
+      <p style="margin-bottom:0"><b>This cannot be undone.</b> We keep no backup you can restore from.</p>
+    </div>
+
+    <div id="step-email">
+      <label for="email">Your account email</label>
+      <input id="email" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com">
+      <button id="send">Email me a deletion link</button>
+      <div id="send-status" class="status"></div>
+    </div>
+
+    <div id="step-confirm" class="hidden">
+      <div class="card">
+        <p style="margin-top:0">
+          Signed in as <b id="who"></b>. Type <b>DELETE</b> below to confirm.
+        </p>
+        <label for="confirm">Confirmation</label>
+        <input id="confirm" type="text" autocomplete="off" autocapitalize="characters" placeholder="DELETE">
+        <button id="doDelete" class="danger" disabled>Permanently delete my account</button>
+        <div id="delete-status" class="status"></div>
+      </div>
+    </div>
+
+    <div id="step-done" class="hidden">
+      <div class="card">
+        <h2 style="margin-top:0">Your account has been deleted</h2>
+        <p style="margin-bottom:0">
+          Your data is gone from our systems. You can close this page. If you had the app
+          installed, you can uninstall it — it will no longer sign in.
+        </p>
+      </div>
+    </div>
+
+    <p class="meta" style="margin-top:26px">
+      Trouble with this page? Email
+      <a href="mailto:admin@context-lang.com">admin@context-lang.com</a> from your
+      account address and we will delete it for you.
+    </p>
+
+    <footer>
+      Context — AI German learning.
+      <a href="privacy.html">Privacy Policy</a> ·
+      <a href="delete-account.html">Delete your account</a>
+    </footer>
+  </div>
+
+  <!-- Pinned to an exact version with an integrity hash, so the browser refuses
+       the script if the CDN ever serves anything else. To upgrade, change the
+       version and recompute: curl -sS <url> | openssl dgst -sha384 -binary | openssl base64 -A -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"
+          integrity="sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok"
+          crossorigin="anonymous"></script>
+  <script>
+    // The same project URL and publishable key the app ships with
+    // (lib/config/app_config.dart) — public by design.
+    const client = window.supabase.createClient(
+      'https://gfdsibvelqceexcgerah.supabase.co',
+      'sb_publishable_vFZdq8NT56-4deP4eH3xOQ_SQQ4GBW2',
+      {
+        auth: {
+          // Implicit, not PKCE. Mail apps open links in their own in-app browser,
+          // so the link is very often opened somewhere other than the browser that
+          // requested it — and PKCE's code verifier only exists in the original one.
+          flowType: 'implicit',
+          detectSessionInUrl: true,
+        },
+      },
+    );
+
+    const $ = (id) => document.getElementById(id);
+    const show = (id) => $(id).classList.remove('hidden');
+    const hide = (id) => $(id).classList.add('hidden');
+    const say = (id, msg, kind) => {
+      const el = $(id);
+      el.textContent = msg;
+      el.className = 'status' + (kind ? ' ' + kind : '');
+    };
+
+    // Arriving back from the emailed link: supabase-js reads the session out of
+    // the URL fragment on construction, so this resolves to a real session.
+    async function refresh() {
+      const { data } = await client.auth.getSession();
+      if (data.session) {
+        $('who').textContent = data.session.user.email || 'your account';
+        hide('step-email');
+        show('step-confirm');
+      }
+    }
+    refresh();
+
+    $('send').addEventListener('click', async () => {
+      const email = $('email').value.trim();
+      if (!email) { say('send-status', 'Enter the email address you signed up with.', 'err'); return; }
+      $('send').disabled = true;
+      say('send-status', 'Sending…');
+      const { error } = await client.auth.signInWithOtp({
+        email,
+        // Must be allowed in Supabase Auth → URL Configuration → Redirect URLs,
+        // or the emailed link falls back to the Site URL.
+        options: { emailRedirectTo: window.location.href.split('#')[0], shouldCreateUser: false },
+      });
+      $('send').disabled = false;
+      // "User not found" is reported as success too: confirming whether an address
+      // has an account would let anyone test which emails are registered.
+      if (error && !/not found|signups not allowed/i.test(error.message)) {
+        say('send-status', 'Could not send the link. Please try again in a minute.', 'err');
+        return;
+      }
+      say('send-status',
+        'If that address has a Context account, a sign-in link is on its way. '
+        + 'Open it on this device to finish deleting your account.', 'ok');
+    });
+
+    $('confirm').addEventListener('input', () => {
+      $('doDelete').disabled = $('confirm').value.trim().toUpperCase() !== 'DELETE';
+    });
+
+    $('doDelete').addEventListener('click', async () => {
+      $('doDelete').disabled = true;
+      say('delete-status', 'Deleting…');
+      const { error } = await client.functions.invoke('delete-account', { body: {} });
+      if (error) {
+        say('delete-status', 'Could not delete the account. Please try again, or email us.', 'err');
+        $('doDelete').disabled = false;
+        return;
+      }
+      // The session belongs to a user that no longer exists, so clear it locally
+      // rather than asking the server to revoke it.
+      await client.auth.signOut({ scope: 'local' });
+      hide('step-confirm');
+      show('step-done');
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+:root { color-scheme: light; }
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: #F3F8FC;
+  color: #16232F;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.6;
+}
+.wrap { max-width: 720px; margin: 0 auto; padding: 40px 22px 80px; }
+.brand { display: flex; align-items: center; gap: 12px; margin-bottom: 34px; }
+.mark {
+  width: 44px; height: 44px; border-radius: 14px; flex: none;
+  background: linear-gradient(150deg, #2E6FDE, #14A39C);
+  color: #fff; font-weight: 700; font-size: 24px;
+  display: flex; align-items: center; justify-content: center;
+}
+.brand-name { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
+h1 { font-size: 30px; line-height: 1.2; margin: 0 0 8px; letter-spacing: -0.5px; }
+h2 { font-size: 19px; margin: 34px 0 10px; letter-spacing: -0.2px; }
+p, li { color: #3E4C58; font-size: 15.5px; }
+ul { padding-left: 22px; }
+li { margin-bottom: 7px; }
+a { color: #14A39C; font-weight: 600; }
+.meta { color: #62778A; font-size: 14px; margin: 0 0 6px; }
+.card {
+  background: #fff; border: 1px solid #DCE9F5; border-radius: 20px;
+  padding: 22px; margin: 24px 0;
+}
+.note {
+  background: #F7F0DC; border: 1px solid #E8DCA0; border-radius: 14px;
+  padding: 14px 16px; font-size: 14.5px; color: #52697C;
+}
+label { display: block; font-size: 12px; font-weight: 700; letter-spacing: .8px;
+  text-transform: uppercase; color: #7B93A6; margin-bottom: 7px; }
+input {
+  width: 100%; border: 1.5px solid #D3E5F4; background: #fff; border-radius: 14px;
+  padding: 14px 15px; font-size: 16px; font-family: inherit; color: #16232F; outline: none;
+}
+input:focus { border-color: #14A39C; box-shadow: 0 0 0 3px rgba(20,163,156,.14); }
+button {
+  width: 100%; border: 0; border-radius: 15px; padding: 15px; margin-top: 16px;
+  font-size: 15.5px; font-weight: 700; font-family: inherit; color: #fff;
+  background: linear-gradient(150deg, #2E6FDE, #14A39C); cursor: pointer;
+}
+button.danger { background: #C0473A; }
+button:disabled { background: #D3E5F4; color: #8CA0B0; cursor: not-allowed; }
+.status { margin-top: 14px; font-size: 14.5px; font-weight: 600; }
+.status.err { color: #C0473A; }
+.status.ok { color: #1F7A3D; }
+.hidden { display: none; }
+footer { margin-top: 46px; border-top: 1px solid #DCE9F5; padding-top: 18px;
+  font-size: 13.5px; color: #7791A3; }
